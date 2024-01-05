@@ -1,18 +1,13 @@
 const { MongoClient } = require("mongodb");
+const mongoose = require("mongoose");
 const uri = process.env.MONGODB_URL;
 
-const client = new MongoClient(uri, {
-  serverSelectionTimeoutMS: 30000,
-  socketTimeoutMS: 45000,
-});
-
 async function createonnection() {
-  try {
-    await client.connect();
-    console.log("connected to mongo atlas");
-  } catch (error) {
-    console.log(error, "error connecting db");
-  }
+  mongoose.connect(uri);
+  const connection = mongoose.connection;
+  connection.once("open", () => {
+    console.log("MongoDB database connection established successfully");
+  });
 }
 
 module.exports = {

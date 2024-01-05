@@ -1,27 +1,30 @@
 const Car = require("../modules/car");
-const { cancelingBookingPeriodCondition } = require("../Utils/utils");
+const {
+  cancelingBookingPeriodCondition,
+  createQueryParams,
+} = require("../Utils/utils");
 
-const addNewCar = async (params) => {
+const addNewCar = async (price, make, milege, model, year) => {
   try {
     const car = new Car({
-      brand: params.brand,
-      price: params.price,
-      model: params.model,
-      milege: params.milege,
-      pulishAt: new Date(),
+      make: make,
+      price: price,
+      model: model,
+      milege: milege,
+      year: year,
+      publishAt: new Date(),
     });
     const result = await car.save();
-    console.log(result);
     return {
       status: 201,
       message: "success",
-      result,
+      data: result,
     };
   } catch (error) {
     console.error(error, "Error adding new car");
     return {
       status: 400,
-      result: [],
+      data: [],
       message: "failed",
     };
   }
@@ -29,50 +32,47 @@ const addNewCar = async (params) => {
 
 const listCars = async (limit, offset) => {
   try {
-    console.log({ limit, offset });
-    const cars = await Car.find({}).skip(offset).limit(limit);
-    console.log(cars);
+    const cars = await Car.find({}, { __v: 0 }).skip(offset).limit(limit);
     return {
       status: 200,
-      result: cars,
+      data: cars,
       message: "success",
     };
   } catch (error) {
     console.error(error, "Error list all car");
     return {
       status: 400,
-      result: [],
+      data: [],
       message: "failed",
     };
   }
 };
-const searchCars = async (params) => {
+const searchCars = async (param) => {
   try {
-    const cars = await Car.find({
-      $or: [{ model: params.model }, { brand: params.brand }],
-    });
+    const query = createQueryParams(param);
+    console.log(query, "querySearch");
+    const cars = await Car.find(query);
     return {
       status: 200,
-      result: cars,
+      data: cars,
       message: "success",
     };
   } catch (error) {
     console.error("error searching..");
     return {
       status: 400,
-      result: [],
+      data: [],
       message: "failed",
     };
   }
 };
-const filterCars = async (params) => {};
 const bookCar = async (carId, userId) => {
   try {
     const car = await getCar(carId);
     if (!car) {
       return {
         status: 404,
-        result: [],
+        data: [],
         message: "car not found!",
       };
     }
@@ -84,14 +84,14 @@ const bookCar = async (carId, userId) => {
     );
     return {
       status: 200,
-      result: [],
+      data: [],
       message: "success",
     };
   } catch (error) {
     console.error(error, "Error booking car");
     return {
       status: 400,
-      result: [],
+      data: [],
       message: "failed",
     };
   }
@@ -102,7 +102,7 @@ const cancelOne = async (carId, userId) => {
     if (!car) {
       return {
         status: 404,
-        result: [],
+        data: [],
         message: "car not found!",
       };
     }
@@ -110,7 +110,7 @@ const cancelOne = async (carId, userId) => {
     if (bookedBy !== userId) {
       return {
         status: 401,
-        result: [],
+        data: [],
         message: "you are not authorized to complete cancelling!",
       };
     }
@@ -118,7 +118,7 @@ const cancelOne = async (carId, userId) => {
     if (!canCancel) {
       return {
         status: 400,
-        result: [],
+        data: [],
         message: "you can not cancel before 24 hours !",
       };
     }
@@ -126,18 +126,18 @@ const cancelOne = async (carId, userId) => {
       {
         _id: carId,
       },
-      { $set: { isBooked: true, bookedBy: userId, bookedAt: new Date() } }
+      { $set: { isBooked: false } }
     );
     return {
       status: 200,
-      result: [],
+      data: [],
       message: "success",
     };
   } catch (error) {
     console.error(error, "Error cancelling car");
     return {
       status: 400,
-      result: [],
+      data: [],
       message: "failed",
     };
   }
@@ -154,7 +154,6 @@ module.exports = {
   addNewCar,
   listCars,
   searchCars,
-  filterCars,
   bookCar,
   cancelOne,
 };
