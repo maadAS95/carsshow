@@ -8,7 +8,7 @@ const {
   cancelOne,
 } = require("../services/cars.services");
 
-carsRouter.get("/v1/listcars ", async (req, res) => {
+carsRouter.get("/v1/listcars", async (req, res) => {
   let { limit, offset } = req.query;
   limit = limit ? parseInt(limit) : 10;
   offset = offset ? parseInt(offset) : 0;
@@ -31,7 +31,7 @@ carsRouter.post("/v1/car", async (req, res) => {
   }
 });
 
-carsRouter.post("/v1/booking", async (req, res) => {
+carsRouter.get("/v1/booking/:id", async (req, res) => {
   const carId = req.params.id;
   if (!carId) {
     res.json({ message: "bad request", errorCode: -1 }).status(400).end();
@@ -41,7 +41,7 @@ carsRouter.post("/v1/booking", async (req, res) => {
   res.json({ result, errorCode: 0 }).status(200).end();
 });
 
-carsRouter.post("/v1/cancelling", async (req, res) => {
+carsRouter.post("/v1/cancelling/:id", async (req, res) => {
   const userId = req.session.userId;
   const carId = req.params.id;
   if (!carId) {

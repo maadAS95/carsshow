@@ -1,3 +1,4 @@
+const { ObjectId } = require("mongodb");
 const Car = require("../modules/car");
 const {
   cancelingBookingPeriodCondition,
@@ -76,9 +77,10 @@ const bookCar = async (carId, userId) => {
         message: "car not found!",
       };
     }
+    const objCarId = new ObjectId(carId);
     const updatedCar = await Car.updateOne(
       {
-        _id: carId,
+        _id: objCarId,
       },
       { $set: { isBooked: true, bookedBy: userId, bookedAt: new Date() } }
     );
