@@ -1,3 +1,5 @@
+const User = require("../modules/user");
+
 function authentication(req, res, next) {
   const authheader = req.headers.authorization;
   if (!authheader) {
@@ -27,4 +29,15 @@ function authentication(req, res, next) {
   }
 }
 
-module.exports = { authentication };
+const authorizeUser = async (userId) => {
+  console.log(userId, "userId");
+  if (!userId) return false;
+
+  const user = await User.findById(userId);
+  console.log(user, "uu");
+  const { roleId } = user;
+  const isAuthorizedUser = roleId == 1 ? true : false;
+  return isAuthorizedUser;
+};
+
+module.exports = { authentication, authorizeUser };

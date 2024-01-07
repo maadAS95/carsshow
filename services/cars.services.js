@@ -4,6 +4,7 @@ const {
   cancelingBookingPeriodCondition,
   createQueryParams,
 } = require("../Utils/utils");
+const { badRequestErrorMsg, successMsg } = require("../Utils/constants");
 
 const addNewCar = async (price, make, milege, model, year) => {
   try {
@@ -23,58 +24,42 @@ const addNewCar = async (price, make, milege, model, year) => {
     };
   } catch (error) {
     console.error(error, "Error adding new car");
-    return {
-      status: 400,
-      data: [],
-      message: "failed",
-    };
+    return badRequestErrorMsg;
   }
 };
-
+// I think there 2 approches about booked cars,i choose to view all cars even booked, users can ask for another
+//one if it is suitable for him
 const listCars = async (limit, offset) => {
   try {
     const cars = await Car.find({}, { __v: 0 }).skip(offset).limit(limit);
-    return {
-      status: 200,
-      data: cars,
-      message: "success",
-    };
+    successMsg.data = cars;
+    return successMsg;
   } catch (error) {
     console.error(error, "Error list all car");
-    return {
-      status: 400,
-      data: [],
-      message: "failed",
-    };
+    return badRequestErrorMsg;
   }
 };
 const searchCars = async (param) => {
   try {
     const query = createQueryParams(param);
     console.log(query, "querySearch");
-    const cars = await Car.find(query);
-    return {
-      status: 200,
-      data: cars,
-      message: "success",
-    };
+    const cars = await Car.find(query, { __v: 0 });
+    successMsg.data = cars;
+    return successMsg;
   } catch (error) {
-    console.error("error searching..");
-    return {
-      status: 400,
-      data: [],
-      message: "failed",
-    };
+    console.error("error searching..", error);
+    return badRequestErrorMsg;
   }
 };
+
 const bookCar = async (carId, userId) => {
   try {
     const car = await getCar(carId);
-    if (!car) {
+    if (!car || car.isBooked) {
       return {
-        status: 404,
+        status: !car ? 404 : 400,
         data: [],
-        message: "car not found!",
+        message: !car ? "car not found!" : "car is already booked",
       };
     }
     const objCarId = new ObjectId(carId);
@@ -84,18 +69,11 @@ const bookCar = async (carId, userId) => {
       },
       { $set: { isBooked: true, bookedBy: userId, bookedAt: new Date() } }
     );
-    return {
-      status: 200,
-      data: [],
-      message: "success",
-    };
+    console.log(updatedCar, "updatedCar");
+    return successMsg;
   } catch (error) {
     console.error(error, "Error booking car");
-    return {
-      status: 400,
-      data: [],
-      message: "failed",
-    };
+    return badRequestErrorMsg;
   }
 };
 const cancelOne = async (carId, userId) => {
@@ -124,32 +102,40 @@ const cancelOne = async (carId, userId) => {
         message: "you can not cancel before 24 hours !",
       };
     }
+    const objCarId = new ObjectId(carId);
     const updatedCar = await Car.updateOne(
       {
-        _id: carId,
+        _id: objCarId,
       },
-      { $set: { isBooked: false } }
+      { $set: { isBooked: false, canceledAt: new Date() } }
     );
-    return {
-      status: 200,
-      data: [],
-      message: "success",
-    };
+    return successMsg;
   } catch (error) {
     console.error(error, "Error cancelling car");
-    return {
-      status: 400,
-      data: [],
-      message: "failed",
-    };
+    return badRequestErrorMsg;
   }
 };
 const getCar = async (carId) => {
   const car = await Car.findById({
     _id: carId,
   });
-  console.log(car, "car33344");
   return car;
+};
+//view all booked cars for clients
+const viewMyCars = async (userId) => {
+  try {
+    const cars = await Car.find(
+      {
+        bookedBy: userId,
+      },
+      { __v: 0 }
+    );
+    successMsg.data = cars;
+    return successMsg;
+  } catch (error) {
+    console.error(error, "Error view my car");
+    return badRequestErrorMsg;
+  }
 };
 
 module.exports = {
@@ -158,4 +144,5 @@ module.exports = {
   searchCars,
   bookCar,
   cancelOne,
+  viewMyCars,
 };

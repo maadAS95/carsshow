@@ -4,8 +4,9 @@ const {
   notFoundErrorMsg,
   badRequestErrorMsg,
   conflictErrorMsg,
+  emailErrorMsg,
 } = require("../Utils/constants");
-const { generateHashedPassword } = require("../Utils/utils");
+const { generateHashedPassword, validateEmail } = require("../Utils/utils");
 
 const login = async (email, password) => {
   try {
@@ -31,11 +32,11 @@ const login = async (email, password) => {
 
 const signUp = async (userName, password, email, roleId) => {
   try {
-    roleId = !isNaN(roleId) ? 1 : 2;
+    roleId = !isNaN(roleId) && roleId == 1 ? 1 : 2; //role 1 for admin only, rest values for clients will be store 2
+    const isValidEmail = validateEmail(email);
+    if (!isValidEmail) return emailErrorMsg;
     const existUser = await getUserByEmail(email);
-    if (existUser.length) {
-      return conflictErrorMsg;
-    }
+    if (existUser.length) return conflictErrorMsg;
     const hashedPassword = await generateHashedPassword(password);
 
     const newUser = new User({

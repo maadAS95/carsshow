@@ -7,37 +7,23 @@ const cancelingBookingPeriodCondition = (bookedAt) => {
 
 const createQueryParams = (param) => {
   try {
-    const { make, model, startDate, endDate, minPrice, maxPrice, milege } =
-      param;
+    const { make, model, year, price, milege } = param;
     const query = {};
     if (make) {
-      query.make = make;
+      query.make = new RegExp(make, "i");
     }
     if (model) {
-      query.model = model;
+      query.model = new RegExp(model, "i");
     }
-    if (startDate || endDate) {
-      query.year = {};
-
-      if (startDate) {
-        query.year.$gte = startDate;
-      }
-
-      if (endDate) {
-        query.year.$lte = endDate;
-      }
+    if (year) {
+      query.year = parseInt(year);
     }
 
-    if (minPrice || maxPrice) {
-      query.price = {};
-
-      if (minPrice) {
-        query.price.$gte = parseInt(minPrice);
-      }
-
-      if (req.query.maxPrice) {
-        query.price.$lte = parseInt(req.query.maxPrice);
-      }
+    if (price) {
+      query.price = parseInt(price);
+    }
+    if (milege) {
+      query.price = parseInt(milege);
     }
     return query;
   } catch (error) {
@@ -45,34 +31,6 @@ const createQueryParams = (param) => {
     return {};
   }
 };
-
-// db.cars.find({
-//   $where: function() {
-//     return this.milege !== null && this.milege !== undefined;
-//   },
-//   $expr: {
-//     $eq: [
-//       "$milege",
-//       db.cars.aggregate([
-//         {
-//           $addFields: {
-//             absoluteDifference: {
-//               $abs: {
-//                 $subtract: ["$milege", milege]
-//               }
-//             }
-//           }
-//         },
-//         {
-//           $sort: {
-//             absoluteDifference: 1
-//           }
-//         },
-
-//       ]).next().milege
-//     ]
-//   }
-// });
 
 const handleResponse = (status) => {
   const responseCode = {
@@ -89,9 +47,33 @@ const generateHashedPassword = async (password) => {
   return hashedPassword;
 };
 
+const validateEmail = (value) => {
+  let isValid = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(
+    value.trim()
+  );
+  return isValid;
+};
+
+const handleInputBody = (body) => {
+  let isValid = true;
+  const { price, make, milege, model, year } = body;
+  if (!price || !make || !milege || !model || !year) return (isValid = false);
+  if (
+    isNaN(year) ||
+    isNaN(price) ||
+    isNaN(milege) ||
+    typeof make != "string" ||
+    typeof model != "string"
+  )
+    return (isValid = false);
+  return isValid;
+};
+
 module.exports = {
   cancelingBookingPeriodCondition,
   createQueryParams,
   handleResponse,
   generateHashedPassword,
+  validateEmail,
+  handleInputBody,
 };

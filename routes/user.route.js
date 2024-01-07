@@ -14,6 +14,8 @@ userRouter.post("/v1/login", async (req, res) => {
   const result = await login(email, password);
   const { status, errorCode } = handleResponse(result.status);
   req.session["userId"] = result.data._id || null;
+  req.session.id = result.data._id;
+  req.session.save();
   res.json({ result, errorCode }).status(status).end();
 });
 
@@ -25,7 +27,7 @@ userRouter.post("/v1/signup", async (req, res) => {
     return;
   }
   const result = await signUp(userName, password, email, roleId);
-
+  req.session["userId"] = result.data._id || null;
   const { errorCode, status } = handleResponse(result.status);
   res.json({ result, errorCode }).status(status).end();
 });
